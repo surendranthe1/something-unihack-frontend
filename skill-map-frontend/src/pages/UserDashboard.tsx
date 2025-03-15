@@ -102,28 +102,21 @@ const UserDashboard: React.FC = () => {
   ];
   
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center text-center">
       {/* Header Section */}
+
       <section className="relative py-12 overflow-hidden">
         <SciFiBackground variation="darker" />
         <div className="container relative z-10 px-4">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-            <div>
-              <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-500">
-                Dashboard
-              </h1>
-              <p className="text-purple-200">
-                Track your 30-day mastery journey
-              </p>
-            </div>
-            
-            <Button 
-              className="mt-4 md:mt-0 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-              onClick={() => window.history.back()}
-            >
-              Return to Learning Path
-            </Button>
-          </div>
+        <div className="flex flex-col items-center text-center mb-8">
+  <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-500">
+    Dashboard
+  </h1>
+  <p className="text-purple-200">
+    Track your 30-day mastery journey
+  </p>
+</div>
+
           
           {/* User Info Section */}
           <div className="bg-black/60 border border-purple-800/40 rounded-lg p-6 mb-8">
@@ -419,6 +412,14 @@ const UserDashboard: React.FC = () => {
           </div>
         </div>
       </section>
+      <div className="py-4">
+  <Button 
+    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+    onClick={() => window.history.back()}
+  >
+    Return to Learning Path
+  </Button>
+</div>
     </div>
   );
 };
