@@ -10,8 +10,10 @@ import { UserProfile } from '../types';
 import skillMapService from '../services/skillMapService';
 import useApi from '../hooks/useApi';
 import SkillTree2 from '@/components/skill-tree/SkillTree2';
-
+import { useNavigate } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
 const HomePage: React.FC = () => {
+  const navigate = useNavigate();
   const { userProfile, setUserProfile } = useContext(UserContext);
   const { skillMap, setSkillMap, loading, setLoading, error, setError } = useSkillContext();
   const [skillName, setSkillName] = useState<string>('');
@@ -83,6 +85,12 @@ const HomePage: React.FC = () => {
           </div>
           
           <SkillSearchForm onSearch={handleSkillNameSubmit} loading={loading} />
+          <Button
+            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+            onClick={() => navigate('/dashboard')}
+          >
+            View Dashboard
+          </Button>
         </div>
       </section>
       
@@ -120,7 +128,6 @@ const HomePage: React.FC = () => {
                 Explore the nodes to see details and resources for each skill
               </p>
             </div>
-            
             <SkillTree2 skillMap={skillMap} />
           </div>
         </section>
