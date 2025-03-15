@@ -86,17 +86,58 @@ export interface SkillMap {
   userId?: string;
 }
 
-// Request interfaces
+// Request interfaces - Updated to match backend API formats
 export interface SkillMapRequest {
-  skillName: string;
-  userProfile?: UserProfile;
-  learningPreferences?: LearningPreferences;
-  timeFrame?: number;
+  skill_name: string;
+  user_profile?: {
+    user_id: string;
+    current_skill_level: SkillLevel;
+    learning_style_preferences: LearningStyle[];
+    time_availability: {
+      hours_per_week: number;
+      preferred_session_length?: number;
+      preferred_days?: string[];
+    };
+    background_knowledge?: string[];
+    goals?: string[];
+  };
+  learning_preferences?: {
+    resource_types?: string[];
+    difficulty_progression?: string;
+    focus_areas?: string[];
+  };
+  time_frame?: number;
 }
 
 export interface SkillMapResponse {
-  skillMap: SkillMap;
-  userId?: string;
+  success: boolean;
+  data: any;
+  message?: string;
+  skill_map: {
+    id: string;
+    root_skill: string;
+    nodes: Record<string, {
+      id: string;
+      name: string;
+      description: string;
+      estimated_hours: number;
+      parent_id?: string;
+      children: string[];
+      resources: {
+        type: string;
+        name: string;
+        url?: string;
+        description?: string;
+      }[];
+      depth: number;
+      progress: number;
+      status: string;
+    }>;
+    total_estimated_hours: number;
+    expected_completion_date: string;
+    user_id?: string;
+  };
+  user_id?: string;
 }
 
 // Added for frontend visualization purposes
@@ -105,12 +146,17 @@ export interface SkillMapEdge {
   target: string;
 }
 
+// For D3 visualization
+export interface SkillNodeType extends SkillNode {
+  prerequisites: string[];
+}
+
 // Helper function to convert backend SkillMap to a format suitable for D3 visualization
 export function prepareSkillMapForVisualization(skillMap: SkillMap): {
-  nodes: Array<SkillNode & { prerequisites: string[] }>;
+  nodes: Array<SkillNodeType>;
   edges: SkillMapEdge[];
 } {
-  const nodeList: Array<SkillNode & { prerequisites: string[] }> = [];
+  const nodeList: Array<SkillNodeType> = [];
   const edgeList: SkillMapEdge[] = [];
   
   // Convert nodes object to array and add prerequisites field

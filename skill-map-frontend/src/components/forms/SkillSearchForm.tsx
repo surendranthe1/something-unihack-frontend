@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { Brain } from 'lucide-react';
+import { Brain, Loader2 } from 'lucide-react';
 
 interface SkillSearchFormProps {
   onSearch: (skillName: string) => void;
@@ -49,6 +49,7 @@ const SkillSearchForm: React.FC<SkillSearchFormProps> = ({ onSearch, loading = f
             onKeyDown={handleKeyDown}
             placeholder="e.g. Machine Learning, Web Development, Data Science"
             className="bg-black/60 border-purple-700/50 text-white py-6"
+            disabled={loading}
           />
           <Button
             onClick={handleSearch}
@@ -56,7 +57,7 @@ const SkillSearchForm: React.FC<SkillSearchFormProps> = ({ onSearch, loading = f
             className="px-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
           >
             {loading ? (
-              <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2" />
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             ) : (
               <Brain className="mr-2 h-5 w-5" />
             )}
