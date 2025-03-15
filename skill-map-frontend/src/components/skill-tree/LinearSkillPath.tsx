@@ -21,20 +21,24 @@ interface PathNode {
 const LinearSkillPath: React.FC<LinearSkillPathProps> = ({ skillMap, onNodeClick }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+  const [transform, setTransform] = useState({ x: 0, y: 0, k: 1.5 }); // Start with 1.5 zoom level
   
   useEffect(() => {
     const handleResize = () => {
       if (svgRef.current) {
-        const containerWidth = svgRef.current.parentElement?.clientWidth || 800;
-        // Make it taller to allow for more dynamic placement
+        // Calculate dimensions based on the number of nodes
         const nodeCount = skillMap ? Object.keys(skillMap.nodes).length : 0;
-        const containerHeight = Math.max(600, nodeCount * 70);
+        
+        // Make the canvas even larger to accommodate dragging
+        const containerWidth = Math.max(1500, nodeCount * 200); // Increased base width
+        const containerHeight = Math.max(1200, nodeCount * 150); // Increased base height
+        
         setDimensions({ width: containerWidth, height: containerHeight });
       }
     };
     
-    window.addEventListener('resize', handleResize);
     handleResize();
+    window.addEventListener('resize', handleResize);
     
     return () => window.removeEventListener('resize', handleResize);
   }, [skillMap]);
@@ -54,8 +58,46 @@ const LinearSkillPath: React.FC<LinearSkillPathProps> = ({ skillMap, onNodeClick
       .attr("height", dimensions.height)
       .attr("viewBox", [0, 0, dimensions.width, dimensions.height]);
     
+    // Create a group that will contain all elements and can be transformed
+    const g = svg.append("g")
+      .attr("class", "everything");
+    
+    // Initialize the zoom behavior
+    const zoom = d3.zoom()
+      .scaleExtent([0.5, 4]) // Allow zooming from 0.5x to 4x (increased max zoom)
+      .on("zoom", (event) => {
+        g.attr("transform", event.transform);
+        setTransform({ 
+          x: event.transform.x, 
+          y: event.transform.y, 
+          k: event.transform.k 
+        });
+      });
+    
+    // Apply zoom behavior to SVG
+    svg.call(zoom as any);
+    
+    // Calculate positions for better initial view
+    const nodePositions = calculateDynamicNodePositions(linearPath, dimensions);
+    
+    // Find a good center point for initial view (average position of first 3 nodes or all if fewer)
+    const nodesToCenter = Math.min(linearPath.length, 3);
+    const centerX = nodePositions.slice(0, nodesToCenter).reduce((sum, pos) => sum + pos.x, 0) / nodesToCenter;
+    const centerY = nodePositions.slice(0, nodesToCenter).reduce((sum, pos) => sum + pos.y, 0) / nodesToCenter;
+    
+    // Initial transform with higher zoom and centered on first few nodes
+    const initialScale = 1.5; // Start with 1.5x zoom
+    const initialTransform = d3.zoomIdentity
+      .translate(
+        dimensions.width / 2 - centerX * initialScale,
+        dimensions.height / 3 - centerY * initialScale
+      )
+      .scale(initialScale);
+    
+    svg.call((zoom as any).transform, initialTransform);
+    
     // Add a subtle grid background for depth
-    createGridBackground(svg, dimensions);
+    createGridBackground(g, dimensions);
     
     // Define gradients
     const defs = svg.append("defs");
@@ -83,14 +125,11 @@ const LinearSkillPath: React.FC<LinearSkillPathProps> = ({ skillMap, onNodeClick
     create3DNodeGradient(defs, "progress-gradient", "#3B82F6", "#1D4ED8");
     create3DNodeGradient(defs, "completed-gradient", "#22C55E", "#16A34A");
     
-    // Calculate node positions - more dynamic
-    const nodePositions = calculateDynamicNodePositions(linearPath, dimensions);
-    
     // Draw the connecting path with broader, flowing edges
-    drawFlowingPath(svg, nodePositions, dimensions);
+    drawFlowingPath(g, nodePositions, dimensions);
     
     // Draw the nodes
-    const nodes = svg.selectAll(".node")
+    const nodes = g.selectAll(".node")
       .data(linearPath)
       .enter()
       .append("g")
@@ -98,17 +137,20 @@ const LinearSkillPath: React.FC<LinearSkillPathProps> = ({ skillMap, onNodeClick
       .attr("transform", (d, i) => `translate(${nodePositions[i].x},${nodePositions[i].y})`)
       .style("cursor", "pointer")
       .on("click", (event, d) => {
+        // Prevent the click from propagating to the zoom behavior
+        event.stopPropagation();
+        
         const originalNode = skillMap.nodes[d.id];
         if (originalNode) {
           onNodeClick(originalNode);
         }
       });
     
-    // Node sizes - even larger for better text display
+    // Node sizes - significantly larger for better visibility
     const getNodeSize = (d: PathNode) => {
-      if (d.index === 0) return 85; // Root node is largest
-      if (d.index === linearPath.length - 1) return 80; // Final node is second largest
-      return 75; // Regular nodes - all larger than before
+      if (d.index === 0) return 160; // Root node is largest (increased size)
+      if (d.index === linearPath.length - 1) return 150; // Final node is second largest
+      return 140; // Regular nodes - all larger than before
     };
     
     // 3D effect with multiple layers
@@ -130,11 +172,11 @@ const LinearSkillPath: React.FC<LinearSkillPathProps> = ({ skillMap, onNodeClick
         return "url(#default-gradient)";
       })
       .attr("stroke", "rgba(255, 255, 255, 0.7)")
-      .attr("stroke-width", 2);
+      .attr("stroke-width", 3);
     
     // Inner circle for text background
     nodes.append("circle")
-      .attr("r", d => getNodeSize(d) - 8)
+      .attr("r", d => getNodeSize(d) - 10)
       .attr("fill", "rgba(0, 0, 0, 0.5)");
     
     // Highlight rim for 3D effect
@@ -144,10 +186,10 @@ const LinearSkillPath: React.FC<LinearSkillPathProps> = ({ skillMap, onNodeClick
         return `M ${-r * 0.7},${-r * 0.7} A ${r},${r} 0 0,1 ${r * 0.7},${-r * 0.7}`;
       })
       .attr("stroke", "rgba(255, 255, 255, 0.8)")
-      .attr("stroke-width", 3)
+      .attr("stroke-width", 4)
       .attr("fill", "none");
     
-    // Node text labels - larger font with better wrapping
+    // Node text labels - much larger font with better wrapping
     nodes.each(function(d) {
       const node = d3.select(this);
       const nodeSize = getNodeSize(d);
@@ -163,8 +205,8 @@ const LinearSkillPath: React.FC<LinearSkillPathProps> = ({ skillMap, onNodeClick
         .style("text-shadow", "0px 2px 3px rgba(0,0,0,0.8)")
         .style("font-family", "ui-sans-serif, system-ui, sans-serif");
       
-      // Start with a larger font size
-      let fontSize = d.index === 0 ? 24 : 20;
+      // Start with a much larger font size
+      let fontSize = d.index === 0 ? 36 : 32; // Significantly increased font sizes
       
       // First attempt: try with single line and large font
       let tspan = text.append("tspan")
@@ -175,7 +217,7 @@ const LinearSkillPath: React.FC<LinearSkillPathProps> = ({ skillMap, onNodeClick
       
       // If it doesn't fit, reduce font size until it fits or hits minimum
       const maxWidth = nodeSize * 1.6;
-      while ((tspan.node()?.getComputedTextLength() || 0) > maxWidth && fontSize > 16) {
+      while ((tspan.node()?.getComputedTextLength() || 0) > maxWidth && fontSize > 24) { // Higher minimum font size
         fontSize -= 1;
         tspan.attr("font-size", `${fontSize}px`);
       }
@@ -216,17 +258,17 @@ const LinearSkillPath: React.FC<LinearSkillPathProps> = ({ skillMap, onNodeClick
       }
     });
     
-    // Add node numbers at the bottom center
+    // Add node numbers at the bottom center - larger size
     nodes.append("circle")
-      .attr("r", 16)
-      .attr("cy", d => getNodeSize(d) - 10)
+      .attr("r", 24) // Much larger number circle
+      .attr("cy", d => getNodeSize(d) - 15)
       .attr("fill", "rgba(0, 0, 0, 0.7)")
       .attr("stroke", "rgba(255, 255, 255, 0.8)")
-      .attr("stroke-width", 1.5);
+      .attr("stroke-width", 2);
     
     nodes.append("text")
-      .attr("y", d => getNodeSize(d) - 10)
-      .attr("font-size", "14px")
+      .attr("y", d => getNodeSize(d) - 15)
+      .attr("font-size", "22px") // Much larger number text
       .attr("fill", "white")
       .attr("text-anchor", "middle")
       .attr("dominant-baseline", "middle")
@@ -237,25 +279,63 @@ const LinearSkillPath: React.FC<LinearSkillPathProps> = ({ skillMap, onNodeClick
     // Add glow animation for the root node
     nodes.filter(d => d.index === 0)
       .append("circle")
-      .attr("r", d => getNodeSize(d) + 8)
+      .attr("r", d => getNodeSize(d) + 10)
       .attr("fill", "none")
       .attr("stroke", "rgba(255, 255, 255, 0.8)")
-      .attr("stroke-width", 3)
+      .attr("stroke-width", 4)
       .attr("class", "glow-circle");
     
     // Add CSS animation for glowing effect
     const style = document.createElement('style');
     style.textContent = `
       @keyframes glow {
-        0% { stroke-opacity: 0.2; stroke-width: 2; }
-        50% { stroke-opacity: 0.8; stroke-width: 5; }
-        100% { stroke-opacity: 0.2; stroke-width: 2; }
+        0% { stroke-opacity: 0.2; stroke-width: 3; }
+        50% { stroke-opacity: 0.8; stroke-width: 6; }
+        100% { stroke-opacity: 0.2; stroke-width: 3; }
       }
       .glow-circle {
         animation: glow 3s infinite;
       }
     `;
     document.head.appendChild(style);
+    
+    // Add initial drag indicator instructions that fade away
+    const instructions = svg.append("g")
+      .attr("class", "instructions")
+      .style("opacity", 1)
+      .attr("transform", `translate(${dimensions.width / 2}, ${dimensions.height - 100})`);
+    
+    instructions.append("rect")
+      .attr("x", -150)
+      .attr("y", -40)
+      .attr("width", 300)
+      .attr("height", 80)
+      .attr("rx", 10)
+      .attr("ry", 10)
+      .attr("fill", "rgba(0, 0, 0, 0.7)")
+      .attr("stroke", "rgba(147, 51, 234, 0.5)")
+      .attr("stroke-width", 2);
+    
+    instructions.append("text")
+      .attr("text-anchor", "middle")
+      .attr("fill", "white")
+      .attr("y", -10)
+      .attr("font-size", "16px")
+      .text("Drag to explore the skill tree");
+    
+    instructions.append("text")
+      .attr("text-anchor", "middle")
+      .attr("fill", "rgba(255, 255, 255, 0.7)")
+      .attr("y", 15)
+      .attr("font-size", "14px")
+      .text("Scroll to zoom in and out");
+    
+    // Fade out instructions after 3 seconds
+    instructions.transition()
+      .delay(3000)
+      .duration(1000)
+      .style("opacity", 0)
+      .remove();
     
   }, [skillMap, dimensions, onNodeClick]);
   
@@ -283,31 +363,29 @@ const LinearSkillPath: React.FC<LinearSkillPathProps> = ({ skillMap, onNodeClick
   }
   
   // Create a subtle grid background for depth perception
-  function createGridBackground(svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, dimensions: { width: number, height: number }) {
+  function createGridBackground(g: d3.Selection<SVGGElement, unknown, null, undefined>, dimensions: { width: number, height: number }) {
     const gridSize = 40;
-    const gridGroup = svg.append("g").attr("class", "grid").lower();
+    const gridGroup = g.append("g").attr("class", "grid").lower();
     
-    // Horizontal lines
-    for (let y = 0; y < dimensions.height; y += gridSize) {
-      gridGroup.append("line")
-        .attr("x1", 0)
-        .attr("y1", y)
-        .attr("x2", dimensions.width)
-        .attr("y2", y)
-        .attr("stroke", "rgba(100, 100, 255, 0.1)")
-        .attr("stroke-width", 1);
-    }
+    // Create a pattern for the grid
+    const defs = d3.select("defs") || d3.select("svg").append("defs");
     
-    // Vertical lines
-    for (let x = 0; x < dimensions.width; x += gridSize) {
-      gridGroup.append("line")
-        .attr("x1", x)
-        .attr("y1", 0)
-        .attr("x2", x)
-        .attr("y2", dimensions.height)
-        .attr("stroke", "rgba(100, 100, 255, 0.1)")
-        .attr("stroke-width", 1);
-    }
+    defs.append("pattern")
+      .attr("id", "grid-pattern")
+      .attr("width", gridSize)
+      .attr("height", gridSize)
+      .attr("patternUnits", "userSpaceOnUse")
+      .append("path")
+      .attr("d", `M ${gridSize} 0 L 0 0 0 ${gridSize}`)
+      .attr("fill", "none")
+      .attr("stroke", "rgba(100, 100, 255, 0.1)")
+      .attr("stroke-width", 1);
+      
+    // Create a background rect with the pattern
+    gridGroup.append("rect")
+      .attr("width", dimensions.width)
+      .attr("height", dimensions.height)
+      .attr("fill", "url(#grid-pattern)");
   }
   
   // Create a linear path from the skill tree
@@ -366,13 +444,13 @@ const LinearSkillPath: React.FC<LinearSkillPathProps> = ({ skillMap, onNodeClick
     const nodeCount = nodes.length;
     
     // Edge padding
-    const padding = 100;
+    const padding = 200; // Even more padding for larger nodes
     const availableWidth = dimensions.width - (padding * 2);
     const availableHeight = dimensions.height - (padding * 2);
     
     // Calculate the maximum node size for minimum distance calculations
-    const maxNodeSize = 85; // Same as the largest node size
-    const minDistance = maxNodeSize * 2.5; // Ensure nodes are at least 2.5x node diameter apart
+    const maxNodeSize = 160; // Same as the largest node size
+    const minDistance = maxNodeSize * 4; // Ensure nodes are much further apart for larger nodes
     
     // Even node spacing - calculate path length
     // Increase total path length to ensure minimum spacing
@@ -387,9 +465,9 @@ const LinearSkillPath: React.FC<LinearSkillPathProps> = ({ skillMap, onNodeClick
       minDistance // Ensure minimum segment length
     );
     
-    // Start with the root node centered at the top
+    // Start with the root node positioned more prominently
     positions.push({
-      x: dimensions.width / 2,
+      x: dimensions.width / 4,
       y: padding
     });
     
@@ -472,16 +550,17 @@ const LinearSkillPath: React.FC<LinearSkillPathProps> = ({ skillMap, onNodeClick
     
     return positions;
   }
+  
   // Draw flowing path with broad edges
   function drawFlowingPath(
-    svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
+    g: d3.Selection<SVGGElement, unknown, null, undefined>,
     positions: { x: number, y: number }[],
     dimensions: { width: number, height: number }
   ) {
     if (positions.length < 2) return;
     
     // Create a group for all path segments
-    const pathGroup = svg.append("g").attr("class", "paths").lower();
+    const pathGroup = g.append("g").attr("class", "paths").lower();
     
     // Draw broader connections between nodes
     for (let i = 0; i < positions.length - 1; i++) {
@@ -532,7 +611,7 @@ const LinearSkillPath: React.FC<LinearSkillPathProps> = ({ skillMap, onNodeClick
         .attr("d", path)
         .attr("fill", "none")
         .attr("stroke", "url(#path-gradient)")
-        .attr("stroke-width", 12) // Much broader
+        .attr("stroke-width", 28) // Much broader path for larger nodes
         .attr("stroke-opacity", 0.7)
         .attr("stroke-linecap", "round")
         .attr("filter", "drop-shadow(0px 3px 5px rgba(0, 0, 0, 0.3))");
@@ -542,15 +621,15 @@ const LinearSkillPath: React.FC<LinearSkillPathProps> = ({ skillMap, onNodeClick
         .attr("d", path)
         .attr("fill", "none")
         .attr("stroke", "rgba(255, 255, 255, 0.4)")
-        .attr("stroke-width", 3)
+        .attr("stroke-width", 6) // Enhanced glow
         .attr("stroke-opacity", 0.7)
         .attr("stroke-linecap", "round")
-        .attr("filter", "blur(3px)");
+        .attr("filter", "blur(4px)");
     }
   }
   
   return (
-    <div className="relative w-full" style={{ height: `${dimensions.height}px` }}>
+    <div className="relative w-full h-full" style={{ overflow: 'hidden' }}>
       <Card className="absolute right-4 top-4 p-3 z-10 bg-black/60 border-purple-700/50 text-white text-sm">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
