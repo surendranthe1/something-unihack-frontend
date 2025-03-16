@@ -1,16 +1,20 @@
-// src/components/skill-tree/NodeDetailPanel.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '../ui/card';
 import { Separator } from '../ui/separator';
 import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
 import { Activity, BookOpen, Video, Clock, CheckCircle, Circle, Info } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '../ui/dialog';
 import { SkillNode } from '../../types';
 
 interface NodeDetailPanelProps {
   node: SkillNode;
+  onStatusChange: (nodeId: string, newStatus: 'completed' | 'in_progress' | 'not_started') => void;
 }
 
-const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ node }) => {
+const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ node, onStatusChange }) => {
+  const [showConfirm, setShowConfirm] = useState(false);
+
   // Determine status icon and color
   const getStatusInfo = () => {
     switch (node.status) {
@@ -22,9 +26,19 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ node }) => {
         return { icon: <Circle className="h-4 w-4" />, color: 'bg-purple-500 text-white' };
     }
   };
-  
+
   const statusInfo = getStatusInfo();
-  
+
+  // Handler to update status
+  const markAsCompleted = () => {
+    setShowConfirm(true); // Show confirmation popup
+  };
+
+  const confirmCompletion = () => {
+    onStatusChange(node.id, 'completed');
+    setShowConfirm(false);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header with gradient background */}
@@ -42,7 +56,35 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ node }) => {
         <h2 className="text-xl font-bold text-white mb-2">{node.name}</h2>
         <p className="text-purple-200 text-sm">{node.description}</p>
       </div>
-      
+
+      {/* Mark as Completed Button */}
+      {node.status !== 'completed' && (
+        <Button
+          className="bg-green-600 text-white hover:bg-green-700 transition-all w-full"
+          onClick={markAsCompleted}
+        >
+          Mark as Completed
+        </Button>
+      )}
+
+      {/* Confirmation Dialog */}
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Completion</DialogTitle>
+          </DialogHeader>
+          <p>Are you sure you want to mark "{node.name}" as completed?</p>
+          <DialogFooter className="flex justify-end gap-3 mt-4">
+            <Button variant="outline" onClick={() => setShowConfirm(false)}>
+              Cancel
+            </Button>
+            <Button className="bg-green-600 text-white hover:bg-green-700" onClick={confirmCompletion}>
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Time estimate */}
       <div className="flex items-center gap-3 p-3 rounded-lg bg-black/40 border border-purple-700/20">
         <Clock className="h-5 w-5 text-purple-400" />
@@ -51,7 +93,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ node }) => {
           <div className="text-white font-bold">{node.estimatedHours} hours</div>
         </div>
       </div>
-      
+
       {/* Recommended Resources */}
       {node.resources && node.resources.length > 0 && (
         <div>
@@ -91,7 +133,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ node }) => {
           </ul>
         </div>
       )}
-      
+
       {/* Related Skills */}
       {node.children && node.children.length > 0 && (
         <div>
@@ -114,20 +156,6 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ node }) => {
           </div>
         </div>
       )}
-      
-      {/* Focus Areas */}
-      <div>
-        <h3 className="text-lg font-medium text-purple-200 mb-3 flex items-center gap-2">
-          <Activity className="h-5 w-5" />
-          <span>What to Focus On</span>
-        </h3>
-        <Separator className="my-2 bg-purple-700/30" />
-        <div className="bg-black/40 p-4 rounded-lg border border-purple-700/30 mt-3">
-          <p className="text-white text-sm whitespace-pre-line">
-            {node.description}
-          </p>
-        </div>
-      </div>
     </div>
   );
 };
