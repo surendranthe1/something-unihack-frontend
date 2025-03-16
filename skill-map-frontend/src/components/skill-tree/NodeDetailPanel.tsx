@@ -64,7 +64,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ node, onStatusChange 
           className="bg-green-600 text-white hover:bg-green-700 transition-all w-full"
           onClick={markAsCompleted}
         >
-          Mark as Completed
+          Review
         </Button>
       )}
 
