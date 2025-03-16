@@ -42,7 +42,7 @@ export interface SkillResource {
   description?: string;
 }
 
-// Updated to match backend structure
+// Keeping the SkillNode interface for backward compatibility
 export interface SkillNode {
   id: string;
   name: string;
@@ -56,13 +56,33 @@ export interface SkillNode {
   status: 'not_started' | 'in_progress' | 'completed';
 }
 
+// New interface for daily tasks
+export interface DailyTask {
+  day: number;
+  name: string;
+  description: string;
+  difficultyLevel: string;
+  estimatedHours: number;
+  resources: SkillResource[];
+  progress: number;
+  status: 'not_started' | 'in_progress' | 'completed';
+}
+
 // Interface for progress updates
 export interface ProgressData {
-  nodeId: string;
+  nodeId: string; // For skill maps - will be string representation of day number for skill programs
   completionPercentage: number;
   timeSpent: number;
   notes?: string;
   assessmentResults?: Record<string, any>;
+}
+
+// Interface for task progress updates
+export interface TaskProgressData {
+  day: number;
+  completionPercentage: number;
+  timeSpent: number;
+  notes?: string;
 }
 
 // Interface for context changes
@@ -76,12 +96,23 @@ export interface ContextChange {
   };
 }
 
-// Updated to match backend structure
+// Keeping the SkillMap interface for backward compatibility
 export interface SkillMap {
   id: string;
   rootSkill: string;
   nodes: Record<string, SkillNode>;
   totalEstimatedHours: number;
+  expectedCompletionDate: Date;
+  userId?: string;
+}
+
+// New interface for skill program
+export interface SkillProgram {
+  id: string;
+  skillName: string;
+  description: string;
+  dailyTasks: DailyTask[];
+  totalHours: number;
   expectedCompletionDate: Date;
   userId?: string;
 }
@@ -109,6 +140,29 @@ export interface SkillMapRequest {
   time_frame?: number;
 }
 
+// New request interface for skill program
+export interface SkillProgramRequest {
+  skill_name: string;
+  user_profile?: {
+    user_id: string;
+    current_skill_level: SkillLevel;
+    learning_style_preferences: LearningStyle[];
+    time_availability: {
+      hours_per_week: number;
+      preferred_session_length?: number;
+      preferred_days?: string[];
+    };
+    background_knowledge?: string[];
+    goals?: string[];
+  };
+  learning_preferences?: {
+    resource_types?: string[];
+    difficulty_progression?: string;
+    focus_areas?: string[];
+  };
+}
+
+// Response interfaces
 export interface SkillMapResponse {
   success: boolean;
   data: any;
@@ -134,6 +188,37 @@ export interface SkillMapResponse {
       status: string;
     }>;
     total_estimated_hours: number;
+    expected_completion_date: string;
+    user_id?: string;
+  };
+  user_id?: string;
+}
+
+// New response interface for skill program
+export interface SkillProgramResponse {
+  success: boolean;
+  data: any;
+  message?: string;
+  skill_program: {
+    id: string;
+    skill_name: string;
+    description: string;
+    daily_tasks: Array<{
+      day: number;
+      name: string;
+      description: string;
+      difficulty_level: string;
+      estimated_hours: number;
+      resources: Array<{
+        type: string;
+        name: string;
+        url?: string;
+        description?: string;
+      }>;
+      progress: number;
+      status: string;
+    }>;
+    total_hours: number;
     expected_completion_date: string;
     user_id?: string;
   };

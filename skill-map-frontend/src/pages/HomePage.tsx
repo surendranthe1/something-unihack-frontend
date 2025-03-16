@@ -3,25 +3,28 @@ import React, { useState, useRef, useContext } from 'react';
 import SciFiBackground from '../components/shared/SciFiBackground';
 import UserProfileForm from '../components/forms/UserProfileForm';
 import SkillSearchForm from '../components/forms/SkillSearchForm';
-import SkillTree from '../components/skill-tree/SkillTree';
 import { UserContext } from '../context/UserContext';
 import { useSkillContext } from '../context/SkillContext';
 import { UserProfile } from '../types';
-import skillMapService from '../services/skillMapService';
+import skillProgramService from '../services/skillProgramService';
 import useApi from '../hooks/useApi';
-import SkillTree2 from '@/components/skill-tree/SkillTree2';
+import SkillProgramTree from '../components/skill-program/SkillProgramTree';
+import PaginatedTaskListView from '../components/skill-program/PaginatedTaskListView';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { GitBranchPlus, ListChecks } from 'lucide-react';
 
 const HomePage: React.FC = () => {
   const { userProfile, setUserProfile } = useContext(UserContext);
-  const { skillMap, setSkillMap, loading, setLoading, error, setError } = useSkillContext();
+  const { skillProgram, setSkillProgram, loading, setLoading, error, setError } = useSkillContext();
   const [skillName, setSkillName] = useState<string>('');
+  const [activeView, setActiveView] = useState<string>("tree");
   
   const skillFormSectionRef = useRef<HTMLDivElement>(null);
   const profileSectionRef = useRef<HTMLDivElement>(null);
-  const skillTreeSectionRef = useRef<HTMLDivElement>(null);
+  const skillProgramSectionRef = useRef<HTMLDivElement>(null);
   
-  // Use the API hook for the generateSkillMap call
-  const { execute: generateMap } = useApi(skillMapService.generateSkillMap);
+  // Use the API hook for the generateSkillProgram call
+  const { execute: generateProgram } = useApi(skillProgramService.generateSkillProgram);
   
   // This flow is now reversed - skill name first, then profile
   const handleSkillNameSubmit = (name: string) => {
@@ -44,24 +47,23 @@ const HomePage: React.FC = () => {
         profile.userId = `user-${Date.now()}`;
       }
       
-      // Generate skill map with the profile
-      const generatedSkillMap = await generateMap(
+      // Generate skill program with the profile
+      const generatedSkillProgram = await generateProgram(
         skillName,
-        profile,
-        90 // Default time frame of 90 days
+        profile
       );
       
-      setSkillMap(generatedSkillMap);
+      setSkillProgram(generatedSkillProgram);
       
-      // Scroll to skill tree section
+      // Scroll to skill program section
       setTimeout(() => {
-        skillTreeSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+        skillProgramSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
     } catch (error: any) {
-      console.error('Error generating skill map:', error);
+      console.error('Error generating skill program:', error);
       setError(error.response?.data?.error?.message || 
                error.message || 
-               'Failed to generate skill map. Please try again.');
+               'Failed to generate skill program. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -75,10 +77,10 @@ const HomePage: React.FC = () => {
         <div className="container relative z-10 px-4 py-16">
           <div className="text-center mb-12">
             <h1 className="text-5xl font-bold tracking-tight mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-500 py-6">
-              Skill Path Navigator
+              30-Day Skill Challenge
             </h1>
             <p className="text-lg text-purple-200 max-w-2xl mx-auto">
-              Build your personalized learning journey with AI-powered skill mapping
+              Build your skills in just 30 days with our AI-powered daily task program
             </p>
           </div>
           
@@ -107,21 +109,40 @@ const HomePage: React.FC = () => {
         </section>
       )}
       
-      {/* Skill Tree Section - only shown after profile is submitted and skill map is generated */}
-      {skillMap && (
-        <section ref={skillTreeSectionRef} className="min-h-screen bg-black relative pb-24">
+      {/* Skill Program Section - only shown after profile is submitted and skill program is generated */}
+      {skillProgram && (
+        <section ref={skillProgramSectionRef} className="min-h-screen bg-black relative pb-24">
           <SciFiBackground variation="darker" />
           <div className="container relative z-10 px-4 py-16">
             <div className="text-center mb-12">
               <h2 className="text-4xl font-bold tracking-tight mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-500 py-6">
-                Your {skillMap.rootSkill} Learning Path
+                Your 30-Day {skillProgram.skillName} Challenge
               </h2>
               <p className="text-lg text-purple-200 max-w-2xl mx-auto">
-                Explore the nodes to see details and resources for each skill
+                Complete one task each day to master your new skill
               </p>
+              
+              <Tabs defaultValue="tree" onValueChange={setActiveView} className="mt-8 max-w-2xl mx-auto">
+                <TabsList className="grid grid-cols-2 w-full">
+                  <TabsTrigger value="tree" className="flex items-center gap-2">
+                    <GitBranchPlus className="h-4 w-4" />
+                    <span>Skill Path View</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="list" className="flex items-center gap-2">
+                    <ListChecks className="h-4 w-4" />
+                    <span>Task List View</span>
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
             
-            <SkillTree2 skillMap={skillMap} />
+            <div className="mt-6">
+              {activeView === "tree" ? (
+                <SkillProgramTree skillProgram={skillProgram} />
+              ) : (
+                <PaginatedTaskListView skillProgram={skillProgram} />
+              )}
+            </div>
           </div>
         </section>
       )}

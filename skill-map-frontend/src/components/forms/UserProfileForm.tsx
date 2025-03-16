@@ -83,14 +83,14 @@ const UserProfileForm: React.FC<UserProfileFormProps> = ({ skillName, onSubmit, 
               
               <div>
                 <label className="block text-sm font-medium text-purple-300 mb-2">
-                  Available Hours per Week
+                  Available Hours per Day
                 </label>
                 <div className="flex items-center gap-4">
                   <Clock className="text-purple-400 h-5 w-5" />
                   <Slider
                     value={[hoursPerWeek]}
                     onValueChange={(value) => setHoursPerWeek(value[0])}
-                    max={40}
+                    max={24}
                     step={1}
                     className="flex-1"
                   />
