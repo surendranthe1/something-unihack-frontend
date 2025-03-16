@@ -4,8 +4,8 @@ import { Separator } from '../ui/separator';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Activity, BookOpen, Video, Clock, CheckCircle, Circle, Info } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '../ui/dialog';
 import { SkillNode } from '../../types';
+import { ReviewPopup } from "@/components/review-popup"
 
 interface NodeDetailPanelProps {
   node: SkillNode;
@@ -13,7 +13,7 @@ interface NodeDetailPanelProps {
 }
 
 const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ node, onStatusChange }) => {
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [showReview, setShowReview] = useState(false);
 
   // Determine status icon and color
   const getStatusInfo = () => {
@@ -29,14 +29,15 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ node, onStatusChange 
 
   const statusInfo = getStatusInfo();
 
-  // Handler to update status
+  // Handler to update status after review
   const markAsCompleted = () => {
-    setShowConfirm(true); // Show confirmation popup
+    setShowReview(true); // Show review popup instead of confirmation
   };
 
-  const confirmCompletion = () => {
+  const handleReviewSubmit = (ratings: { overall: number; resources: number; project: number }) => {
+    console.log("Review submitted for node", node.id, ":", ratings);
     onStatusChange(node.id, 'completed');
-    setShowConfirm(false);
+    setShowReview(false);
   };
 
   return (
@@ -67,23 +68,12 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ node, onStatusChange 
         </Button>
       )}
 
-      {/* Confirmation Dialog */}
-      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Completion</DialogTitle>
-          </DialogHeader>
-          <p>Are you sure you want to mark "{node.name}" as completed?</p>
-          <DialogFooter className="flex justify-end gap-3 mt-4">
-            <Button variant="outline" onClick={() => setShowConfirm(false)}>
-              Cancel
-            </Button>
-            <Button className="bg-green-600 text-white hover:bg-green-700" onClick={confirmCompletion}>
-              Confirm
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Review Popup replacing the confirmation Dialog */}
+      <ReviewPopup 
+        open={showReview} 
+        onOpenChange={setShowReview} 
+        onSubmit={handleReviewSubmit}
+      />
 
       {/* Time estimate */}
       <div className="flex items-center gap-3 p-3 rounded-lg bg-black/40 border border-purple-700/20">
