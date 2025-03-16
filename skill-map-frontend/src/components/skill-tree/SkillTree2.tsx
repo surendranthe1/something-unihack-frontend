@@ -283,7 +283,7 @@ const SkillTree: React.FC<SkillTreeProps> = ({ skillMap }) => {
   };
 
   return (
-    <div ref={containerRef} className="bg-black/30 border border-purple-700/30 rounded-lg p-4 relative overflow-hidden">
+    <div ref={containerRef} className="bg-black/30 border border-slate-600/30 rounded-lg p-4 relative overflow-hidden">
       <div className="flex h-full">
         <div className="w-full flex flex-col md:flex-row relative">
           {/* React Flow Graph */}
@@ -320,9 +320,9 @@ const SkillTree: React.FC<SkillTreeProps> = ({ skillMap }) => {
                 exit={{ x: '100%', opacity: 0 }}
                 transition={{ duration: 0.3, ease: 'easeInOut' }}
               >
-                <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-900/90 to-black/90 backdrop-blur-sm border-b border-purple-700/30 p-3 flex justify-between items-center">
+                <div className="sticky top-0 z-10 bg-gradient-to-r from-slate-800/90 to-black/90 backdrop-blur-sm border-b border-slate-600/30 p-3 flex justify-between items-center">
                   <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                    <span className="bg-purple-700 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">
+                    <span className="bg-slate-700 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">
                       {nodeIndex}
                     </span>
                     Skill Details
@@ -331,7 +331,7 @@ const SkillTree: React.FC<SkillTreeProps> = ({ skillMap }) => {
                     variant="ghost"
                     size="icon"
                     onClick={handleClosePanel}
-                    className="rounded-full h-8 w-8 hover:bg-purple-900/50"
+                    className="rounded-full h-8 w-8 hover:bg-slate-700/50"
                   >
                     <Minimize2 className="h-4 w-4 text-white" />
                   </Button>
@@ -350,15 +350,15 @@ const SkillTree: React.FC<SkillTreeProps> = ({ skillMap }) => {
         <Sheet open={isPanelOpen && isMobile} onOpenChange={setIsPanelOpen}>
           <SheetContent
             side="bottom"
-            className="h-[90vh] p-0 border-t border-purple-700/50 bg-black/95"
+            className="h-[90vh] p-0 border-t border-slate-600/50 bg-black/95"
           >
-            <SheetHeader className="bg-gradient-to-r from-purple-900/90 to-black/90 p-3 border-b border-purple-700/30">
+            <SheetHeader className="bg-gradient-to-r from-slate-800/90 to-black/90 p-3 border-b border-slate-600/30">
               <div className="flex items-center justify-between">
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={handleClosePanel}
-                  className="rounded-full h-8 w-8 hover:bg-purple-900/50"
+                  className="rounded-full h-8 w-8 hover:bg-slate-700/50"
                 >
                   <ArrowLeft className="h-4 w-4 text-white" />
                 </Button>
@@ -382,7 +382,7 @@ const SkillTree: React.FC<SkillTreeProps> = ({ skillMap }) => {
       )}
 
       {/* Draggable instructions */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/70 px-4 py-2 rounded-full text-white text-sm border border-purple-700/50 z-10 pointer-events-none opacity-70">
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/70 px-4 py-2 rounded-full text-white text-sm border border-slate-600/50 z-10 pointer-events-none opacity-70">
         <span>Drag to explore • Scroll to zoom</span>
       </div>
     </div>

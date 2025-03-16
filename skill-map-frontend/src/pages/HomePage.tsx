@@ -3,7 +3,6 @@ import React, { useState, useRef, useContext } from 'react';
 import SciFiBackground from '../components/shared/SciFiBackground';
 import UserProfileForm from '../components/forms/UserProfileForm';
 import SkillSearchForm from '../components/forms/SkillSearchForm';
-import SkillTree from '../components/skill-tree/SkillTree';
 import { UserContext } from '../context/UserContext';
 import { useSkillContext } from '../context/SkillContext';
 import { UserProfile } from '../types';

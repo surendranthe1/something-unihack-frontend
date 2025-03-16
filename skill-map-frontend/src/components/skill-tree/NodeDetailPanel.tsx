@@ -23,7 +23,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ node, onStatusChange 
       case 'in_progress':
         return { icon: <Activity className="h-4 w-4" />, color: 'bg-blue-500 text-white' };
       default:
-        return { icon: <Circle className="h-4 w-4" />, color: 'bg-purple-500 text-white' };
+        return { icon: <Circle className="h-4 w-4" />, color: 'bg-slate-500 text-white' };
     }
   };
 
@@ -43,7 +43,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ node, onStatusChange 
   return (
     <div className="space-y-6">
       {/* Header with gradient background */}
-      <div className="p-4 rounded-lg bg-gradient-to-r from-purple-900/50 to-blue-900/50 border border-purple-500/30">
+      <div className="p-4 rounded-lg bg-gradient-to-r from-slate-800/70 to-blue-900/50 border border-blue-500/30">
         <div className="flex items-center gap-3 mb-2">
           <Badge className={statusInfo.color}>
             <div className="flex items-center gap-1">
@@ -55,7 +55,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ node, onStatusChange 
           </Badge>
         </div>
         <h2 className="text-xl font-bold text-white mb-2">{node.name}</h2>
-        <p className="text-purple-200 text-sm">{node.description}</p>
+        <p className="text-slate-200 text-sm">{node.description}</p>
       </div>
 
       {/* Mark as Completed Button */}
@@ -76,10 +76,10 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ node, onStatusChange 
       />
 
       {/* Time estimate */}
-      <div className="flex items-center gap-3 p-3 rounded-lg bg-black/40 border border-purple-700/20">
-        <Clock className="h-5 w-5 text-purple-400" />
+      <div className="flex items-center gap-3 p-3 rounded-lg bg-black/40 border border-slate-600/30">
+        <Clock className="h-5 w-5 text-blue-400" />
         <div>
-          <div className="text-sm text-purple-300">Estimated Time</div>
+          <div className="text-sm text-slate-300">Estimated Time</div>
           <div className="text-white font-bold">{node.estimatedHours} hours</div>
         </div>
       </div>
@@ -87,16 +87,16 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ node, onStatusChange 
       {/* Recommended Resources */}
       {node.resources && node.resources.length > 0 && (
         <div>
-          <h3 className="text-lg font-medium text-purple-200 mb-3 flex items-center gap-2">
+          <h3 className="text-lg font-medium text-slate-200 mb-3 flex items-center gap-2">
             <BookOpen className="h-5 w-5" />
             <span>Learning Resources</span>
           </h3>
-          <Separator className="my-2 bg-purple-700/30" />
+          <Separator className="my-2 bg-slate-600/30" />
           <ul className="space-y-3 mt-3">
             {node.resources.map((resource, index) => (
-              <li key={index} className="bg-black/40 p-3 rounded-lg border border-purple-700/30 hover:border-purple-500/50 transition-colors">
+              <li key={index} className="bg-black/40 p-3 rounded-lg border border-slate-600/30 hover:border-blue-500/50 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-purple-700 flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-slate-500 to-blue-700 flex items-center justify-center flex-shrink-0">
                     {resource.type === 'video' || resource.type === 'course' ? (
                       <Video className="h-4 w-4 text-white" />
                     ) : (
@@ -105,7 +105,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ node, onStatusChange 
                   </div>
                   <div>
                     <div className="text-white text-sm font-medium">{resource.name}</div>
-                    <div className="text-purple-300 text-xs">{resource.description || resource.type}</div>
+                    <div className="text-slate-300 text-xs">{resource.description || resource.type}</div>
                     {resource.url && (
                       <a 
                         href={resource.url} 
@@ -127,18 +127,18 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ node, onStatusChange 
       {/* Related Skills */}
       {node.children && node.children.length > 0 && (
         <div>
-          <h3 className="text-lg font-medium text-purple-200 mb-3 flex items-center gap-2">
+          <h3 className="text-lg font-medium text-slate-200 mb-3 flex items-center gap-2">
             <Info className="h-5 w-5" />
             <span>Related Skills</span>
           </h3>
-          <Separator className="my-2 bg-purple-700/30" />
-          <div className="bg-black/40 p-4 rounded-lg border border-purple-700/30 mt-3">
+          <Separator className="my-2 bg-slate-600/30" />
+          <div className="bg-black/40 p-4 rounded-lg border border-slate-600/30 mt-3">
             <p className="text-white text-sm mb-2">
               After mastering this skill, you'll be ready to learn:
             </p>
             <div className="flex flex-wrap gap-2 mt-2">
               {node.children.map((child, index) => (
-                <Badge key={index} variant="outline" className="bg-purple-900/30 text-purple-200 border-purple-700/50">
+                <Badge key={index} variant="outline" className="bg-slate-800/60 text-slate-200 border-slate-600/50">
                   {child}
                 </Badge>
               ))}
